@@ -1,0 +1,27 @@
+{
+  "name": "micro-cms-query-builder",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:nhan1303/micro-cms-query-builder.git",
+  "author": "Nhan Nguyen <nhan1303@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@types/lodash": "4.14.191",
+    "lodash": "4.17.21",
+    "typescript": "5.0.2",
+    "zod": "3.21.4"
+  },
+  "devDependencies": {
+    "@babel/core": "7.21.3",
+    "@babel/preset-env": "7.20.2",
+    "@babel/preset-react": "7.18.6",
+    "@babel/preset-typescript": "7.21.0",
+    "@types/jest": "29.5.0",
+    "babel-loader": "9.1.2",
+    "jest": "29.5.0",
+    "ts-node": "10.9.1"
+  }
+}
