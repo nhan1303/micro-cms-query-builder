@@ -1,45 +1,23 @@
 import { isEmpty, isFunction, isString } from "lodash";
-import { z } from "zod";
-
-export enum OperatorEnum {
-  "<" = "[less_than]",
-  ">" = "[greater_than]",
-  "=" = "[equals]",
-  "!=" = "[not_equals]",
-  "<=" = "[less_than],[equals]",
-  ">=" = "[greater_than],[equals]",
-  "contains" = "[contains]",
-  "begins_with" = "[begins_with]",
-  "exists" = "[exists]",
-  "not_exists" = "[not_exists]",
-}
-
-export type TOperator = keyof typeof OperatorEnum;
-
-export const MWhereParams = z.object({
-  0: z.string(),
-  1: z.string(),
-  2: z.string().optional(),
-});
-
-export type TWhereParams = z.infer<typeof MWhereParams>;
-
-export type TWhereOption =
-  | TWhereParams
-  | ((builder: MicroCmsQueryBuilder) => MicroCmsQueryBuilder);
+import { MOperatorKey, OperatorEnum, TOperatorKey } from "../types";
+import { TWhereOption, TWhereParams } from "./types/where";
 
 export default class MicroCmsQueryBuilder {
   private query: string = "";
 
-  private getParams(param: TWhereParams): [string, TOperator, string] {
+  private getParams(param: TWhereParams): [string, TOperatorKey, string] {
     const fieldName = param[0];
-    const operatorKey = param[1] as TOperator;
+
+    const operatorKey =
+      MOperatorKey.safeParse(param[1]).success == true
+        ? (param[1] as TOperatorKey)
+        : "=";
     const fieldValue = param[2] || "";
 
     return [fieldName, operatorKey, fieldValue];
   }
 
-  private getFilteringKeyword(operatorKey: TOperator) {
+  private getFilteringKeyword(operatorKey: TOperatorKey): OperatorEnum {
     return OperatorEnum[operatorKey];
   }
 
@@ -125,11 +103,3 @@ export default class MicroCmsQueryBuilder {
     return this.query;
   }
 }
-
-const queryBuilder = new MicroCmsQueryBuilder();
-const query = queryBuilder
-  .where(["name", "=", "nhan"])
-  .where(["age", ">", "28"])
-  .get();
-
-console.log("test query", query);

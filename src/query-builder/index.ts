@@ -1,1 +1,1 @@
-export * from "./query-builder-like-laravel";
+export * from "./mimic-laravel";

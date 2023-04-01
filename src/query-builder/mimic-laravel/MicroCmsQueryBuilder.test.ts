@@ -1,4 +1,4 @@
-import MicroCmsQueryBuilder from "./QueryBuilderLikeLaravel";
+import MicroCmsQueryBuilder from "./MicroCmsQueryBuilder";
 
 describe("MicroCmsQueryBuilder - operators", () => {
   it("should use [equals] if declare operator '='", () => {
@@ -66,7 +66,9 @@ describe("MicroCmsQueryBuilder - operators", () => {
 
   it("should use [begins_with] if declare operator 'begins_with'", () => {
     const queryBuilder = new MicroCmsQueryBuilder();
-    const query = queryBuilder.where(["pushlishedAt", "begins_with", "2023-03-03"]).get();
+    const query = queryBuilder
+      .where(["pushlishedAt", "begins_with", "2023-03-03"])
+      .get();
 
     const expected = "pushlishedAt[begins_with]2023-03-03";
 
