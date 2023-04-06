@@ -1,6 +1,7 @@
 import { isEmpty, isFunction, isString } from "lodash";
-import { ZodError } from "zod";
 import { CombiningOperator, OperatorEnum, TOperatorKey } from "../types";
+import { ZodError } from "zod";
+
 import {
   MWhereParams,
   TWhereOption,
@@ -8,7 +9,7 @@ import {
   WhereType,
 } from "./types/where";
 
-export default class MicroCmsQueryBuilder {
+export default class MicroCmsQueryBuilder<T = unknown> {
   private combiningOperatorDict: Record<WhereType, CombiningOperator> = {
     [WhereType.where]: CombiningOperator["[and]"],
     [WhereType.orWhere]: CombiningOperator["[or]"],
@@ -21,7 +22,7 @@ export default class MicroCmsQueryBuilder {
   }
 
   private getValuesFromWhereParams(
-    whereParam: TWhereParams
+    whereParam: TWhereParams<T>
   ): [string, TOperatorKey, string] | ZodError {
     const validationResult = MWhereParams.safeParse(whereParam);
 
@@ -48,7 +49,7 @@ export default class MicroCmsQueryBuilder {
     const query = expresions.join("[or]");
     return `(${query})`;
   }
-  private prepareQuery(param: TWhereParams): string | ZodError {
+  private prepareQuery(param: TWhereParams<T>): string | ZodError {
     const values = this.getValuesFromWhereParams(param);
     if (this.isZodError(values)) {
       return values;
@@ -66,7 +67,7 @@ export default class MicroCmsQueryBuilder {
 
   private buildQuery(
     whereType: WhereType,
-    param: TWhereParams | string
+    param: TWhereParams<T> | string
   ): string | ZodError {
     const currentQuery = this.query;
     const appendQuery = isString(param) ? param : this.prepareQuery(param);
@@ -83,7 +84,7 @@ export default class MicroCmsQueryBuilder {
 
   private getStringQueryFromOption(
     whereType: WhereType,
-    whereOption: TWhereOption
+    whereOption: TWhereOption<T>
   ): string | ZodError {
     if (isFunction(whereOption)) {
       const appendQuery = `(${whereOption(new MicroCmsQueryBuilder()).get()})`;
@@ -93,7 +94,7 @@ export default class MicroCmsQueryBuilder {
     return this.buildQuery(whereType, whereOption);
   }
 
-  public where(whereOption: TWhereOption) {
+  public where(whereOption: TWhereOption<T>) {
     const newQuery = this.getStringQueryFromOption(
       WhereType.where,
       whereOption
@@ -107,7 +108,7 @@ export default class MicroCmsQueryBuilder {
     return this;
   }
 
-  public orWhere(whereOption: TWhereOption) {
+  public orWhere(whereOption: TWhereOption<T>) {
     const newQuery = this.getStringQueryFromOption(
       WhereType.orWhere,
       whereOption

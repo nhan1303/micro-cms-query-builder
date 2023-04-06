@@ -1,3 +1,5 @@
 import MicroCmsQueryBuilder from "../MicroCmsQueryBuilder";
 
-export type TMicroCmsQueryBuilder = InstanceType<typeof MicroCmsQueryBuilder>;
+export type TMicroCmsQueryBuilder<T> = InstanceType<
+  typeof MicroCmsQueryBuilder<T>
+>;

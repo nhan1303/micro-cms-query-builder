@@ -1,5 +1,5 @@
+import { MOperatorKey, TOperatorKey } from "../../types/operator";
 import { z } from "zod";
-import { MOperatorKey } from "../../types/operator";
 import { TMicroCmsQueryBuilder } from "./class";
 
 export enum WhereType {
@@ -15,8 +15,10 @@ export const MWhereParams = z.union([
   MWhereParamsOmitFieldValue,
 ]);
 
-export type TWhereParams = z.infer<typeof MWhereParams>;
+export type TWhereParams<T> =
+  | [T extends Record<string, string> ? keyof T : T, TOperatorKey, string]
+  | [T extends Record<string, string> ? keyof T : T, TOperatorKey];
 
-export type TWhereOption =
-  | TWhereParams
-  | ((builder: TMicroCmsQueryBuilder) => TMicroCmsQueryBuilder);
+export type TWhereOption<T> =
+  | TWhereParams<T>
+  | ((builder: TMicroCmsQueryBuilder<T>) => TMicroCmsQueryBuilder<T>);
