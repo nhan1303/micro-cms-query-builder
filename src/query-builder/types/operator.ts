@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export enum CombiningOperator {
+  "[and]" = "[and]",
+  "[or]" = "[or]",
+}
+
 export enum OperatorEnum {
   "<" = "[less_than]",
   ">" = "[greater_than]",

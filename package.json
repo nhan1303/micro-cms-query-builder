@@ -9,7 +9,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@types/lodash": "4.14.191",
+    "@types/lodash": "4.14.192",
     "lodash": "4.17.21",
     "typescript": "5.0.2",
     "zod": "3.21.4"

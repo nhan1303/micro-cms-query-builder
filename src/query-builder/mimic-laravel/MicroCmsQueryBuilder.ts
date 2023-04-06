@@ -1,19 +1,35 @@
 import { isEmpty, isFunction, isString } from "lodash";
-import { MOperatorKey, OperatorEnum, TOperatorKey } from "../types";
-import { TWhereOption, TWhereParams } from "./types/where";
+import { ZodError } from "zod";
+import { CombiningOperator, OperatorEnum, TOperatorKey } from "../types";
+import {
+  MWhereParams,
+  TWhereOption,
+  TWhereParams,
+  WhereType,
+} from "./types/where";
 
 export default class MicroCmsQueryBuilder {
+  private combiningOperatorDict: Record<WhereType, CombiningOperator> = {
+    [WhereType.where]: CombiningOperator["[and]"],
+    [WhereType.orWhere]: CombiningOperator["[or]"],
+  };
+
   private query: string = "";
 
-  private getParams(param: TWhereParams): [string, TOperatorKey, string] {
-    const fieldName = param[0];
+  private isZodError(input: unknown): input is ZodError {
+    return input instanceof ZodError;
+  }
 
-    const operatorKey =
-      MOperatorKey.safeParse(param[1]).success == true
-        ? (param[1] as TOperatorKey)
-        : "=";
-    const fieldValue = param[2] || "";
+  private getValuesFromWhereParams(
+    whereParam: TWhereParams
+  ): [string, TOperatorKey, string] | ZodError {
+    const validationResult = MWhereParams.safeParse(whereParam);
 
+    if (!validationResult.success) {
+      return validationResult.error;
+    }
+
+    const [fieldName, operatorKey, fieldValue = ""] = validationResult.data;
     return [fieldName, operatorKey, fieldValue];
   }
 
@@ -32,8 +48,13 @@ export default class MicroCmsQueryBuilder {
     const query = expresions.join("[or]");
     return `(${query})`;
   }
-  private prepareQuery(param: TWhereParams): string {
-    const [fieldName, operatorKey, fieldValue] = this.getParams(param);
+  private prepareQuery(param: TWhereParams): string | ZodError {
+    const values = this.getValuesFromWhereParams(param);
+    if (this.isZodError(values)) {
+      return values;
+    }
+
+    const [fieldName, operatorKey, fieldValue] = values;
     const operatorValue = this.getFilteringKeyword(operatorKey);
 
     if (operatorValue.includes(",")) {
@@ -43,54 +64,59 @@ export default class MicroCmsQueryBuilder {
     return `${fieldName}${operatorValue}${fieldValue}`;
   }
 
-  private buildQuery(whereType: string, param: TWhereParams | string): string {
+  private buildQuery(
+    whereType: WhereType,
+    param: TWhereParams | string
+  ): string | ZodError {
     const currentQuery = this.query;
+    const appendQuery = isString(param) ? param : this.prepareQuery(param);
+    if (this.isZodError(appendQuery)) return appendQuery;
 
-    switch (whereType) {
-      case "where": {
-        const appendQuery = isString(param) ? param : this.prepareQuery(param);
-        const newQuery = isEmpty(currentQuery)
-          ? appendQuery
-          : `${currentQuery}[and]${appendQuery}`;
+    const combiningOperator = this.combiningOperatorDict[whereType];
 
-        return newQuery;
-      }
+    const newQuery = isEmpty(currentQuery)
+      ? appendQuery
+      : `${currentQuery}${combiningOperator}${appendQuery}`;
 
-      case "orWhere": {
-        const appendQuery = isString(param) ? param : this.prepareQuery(param);
-        const newQuery = isEmpty(currentQuery)
-          ? appendQuery
-          : `${currentQuery}[or]${appendQuery}`;
-
-        return newQuery;
-      }
-
-      default:
-        return "";
-    }
+    return newQuery;
   }
 
   private getStringQueryFromOption(
-    whereType: string,
+    whereType: WhereType,
     whereOption: TWhereOption
-  ): string {
+  ): string | ZodError {
     if (isFunction(whereOption)) {
       const appendQuery = `(${whereOption(new MicroCmsQueryBuilder()).get()})`;
-      const newQuery = this.buildQuery(whereType, appendQuery);
-      return `${newQuery}`;
+      return this.buildQuery(whereType, appendQuery);
     }
 
     return this.buildQuery(whereType, whereOption);
   }
 
   public where(whereOption: TWhereOption) {
-    const newQuery = this.getStringQueryFromOption("where", whereOption);
+    const newQuery = this.getStringQueryFromOption(
+      WhereType.where,
+      whereOption
+    );
+
+    if (this.isZodError(newQuery)) {
+      return this;
+    }
+
     this.set(newQuery);
     return this;
   }
 
   public orWhere(whereOption: TWhereOption) {
-    const newQuery = this.getStringQueryFromOption("orWhere", whereOption);
+    const newQuery = this.getStringQueryFromOption(
+      WhereType.orWhere,
+      whereOption
+    );
+
+    if (this.isZodError(newQuery)) {
+      return this;
+    }
+
     this.set(newQuery);
     return this;
   }
